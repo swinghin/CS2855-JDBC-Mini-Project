@@ -53,6 +53,8 @@ public class myDBApp {
 		// creation.
 		dropTable(connection, "delayedFlights");
 		dropTable(connection, "airport");
+
+		System.out.println("Create database delayedFlights...");
 		createTable(connection, """
 				delayedFlights(
 				    ID_of_Delayed_Flight int,
@@ -76,7 +78,10 @@ public class myDBApp {
 				    primary key (ID_of_Delayed_Flight)
 				);
 								""");
-		insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights");
+		System.out.println(
+				"Inserted " + insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights") + " rows.\n");
+
+		System.out.println("Create database delayedFlights...");
 		createTable(connection, """
 				airport (
 				    airportCode char(3),
@@ -86,7 +91,7 @@ public class myDBApp {
 				    primary key (airportCode)
 				);
 								""");
-		insertIntoTableFromFile(connection, "airport", "airport");
+		System.out.println("Inserted " + insertIntoTableFromFile(connection, "airport", "airport") + " rows.\n");
 
 		ResultSet query1 = executeQuery(connection, """
 				SELECT
@@ -109,7 +114,7 @@ public class myDBApp {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		System.out.println();
 
 		ResultSet query2 = executeQuery(connection, """
@@ -135,10 +140,36 @@ public class myDBApp {
 			e.printStackTrace();
 		}
 
+		System.out.println();
+
+		ResultSet query3 = executeQuery(connection, """
+				SELECT
+				    Dest,
+				    SUM(ArrDelay)
+				FROM
+				    delayedFlights
+				GROUP BY
+				    Dest
+				ORDER BY
+				    SUM(ArrDelay) DESC
+				OFFSET
+				    1 ROWS
+				FETCH NEXT
+				    5 ROWS ONLY;
+																""");
+		try {
+			System.out.println("################## 3nd Query ###############");
+			while (query3.next()) {
+				System.out.println(query3.getString(1).trim() + " " + query3.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static Connection connectToDatabase(String user, String password, String database) {
-		System.out.println("------ Testing PostgreSQL JDBC Connection ------");
+//		System.out.println("------ Testing PostgreSQL JDBC Connection ------");
 		Connection connection = null;
 		try {
 			String protocol = "jdbc:postgresql://";
@@ -161,7 +192,7 @@ public class myDBApp {
 	}
 
 	public static ResultSet executeQuery(Connection connection, String query) {
-		System.out.println("DEBUG: Executing query...");
+//		System.out.println("DEBUG: Executing query...");
 		try {
 			Statement st = connection.createStatement();
 			ResultSet rs = st.executeQuery(query);
@@ -173,7 +204,7 @@ public class myDBApp {
 	}
 
 	public static void dropTable(Connection connection, String table) {
-		System.out.println("DEBUG: Dropping table if exists: " + table);
+//		System.out.println("DEBUG: Dropping table if exists: " + table);
 		try {
 			Statement st = connection.createStatement();
 			st.execute("DROP TABLE IF EXISTS " + table);
@@ -184,7 +215,7 @@ public class myDBApp {
 	}
 
 	public static void createTable(Connection connection, String tableDescription) {
-		System.out.println("DEBUG: Creating table...");
+//		System.out.println("DEBUG: Creating table...");
 		try {
 			Statement st = connection.createStatement();
 			st.execute("CREATE TABLE " + tableDescription);
