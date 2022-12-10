@@ -13,7 +13,7 @@ import java.util.Scanner;
 public class myDBApp {
 
 	/**
-	 * 
+	 * Main method for myDBApp.
 	 * 
 	 * @param argv Command-line arguments
 	 * @throws SQLException Thrown when error in SQL
@@ -53,20 +53,172 @@ public class myDBApp {
 		// creation.
 		dropTable(connection, "delayedFlights");
 		dropTable(connection, "airport");
-		createTable(connection,
-				"delayedFlights(ID_of_Delayed_Flight int,Month int,DayofMonth int,"
-						+ "DayOfWeek int,DepTime int,ScheduledDepTime int,ArrTime int,ScheduledArrTime int,"
-						+ "UniqueCarrier char(2),FlightNum char(4),ActualFlightTime int,scheduledFlightTime int,"
-						+ "AirTime int,ArrDelay int,DepDelay int, Orig char(3),Dest char(3),Distance int,"
-						+ "primary key (ID_of_Delayed_Flight));");
-		insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights");
-		createTable(connection, "airport(airportCode char(3),airportName char(60),"
-				+ "City char(40),State char(2),primary key (airportCode));");
-		insertIntoTableFromFile(connection, "airport", "airport");
+
+		System.out.println("Create database delayedFlights...");
+		createTable(connection, """
+				delayedFlights(
+				    ID_of_Delayed_Flight int,
+				    Month int,
+				    DayofMonth int,
+				    DayOfWeek int,
+				    DepTime int,
+				    ScheduledDepTime int,
+				    ArrTime int,
+				    ScheduledArrTime int,
+				    UniqueCarrier char(2),
+				    FlightNum char(4),
+				    ActualFlightTime int,
+				    scheduledFlightTime int,
+				    AirTime int,
+				    ArrDelay int,
+				    DepDelay int,
+				    Orig char(3),
+				    Dest char(3),
+				    Distance int,
+				    primary key (ID_of_Delayed_Flight)
+				);
+								""");
+		System.out.println(
+				"Inserted " + insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights") + " rows.\n");
+
+		System.out.println("Create database delayedFlights...");
+		createTable(connection, """
+				airport (
+				    airportCode char(3),
+				    airportName char(100),
+				    City char(50),
+				    State char(2),
+				    primary key (airportCode)
+				);
+								""");
+		System.out.println("Inserted " + insertIntoTableFromFile(connection, "airport", "airport") + " rows.\n");
+
+		ResultSet query1 = executeQuery(connection, """
+				SELECT
+				    UniqueCarrier,
+				    Count(*)
+				FROM
+				    delayedFlights
+				GROUP BY
+				    UniqueCarrier
+				ORDER BY
+				    Count(*) DESC
+				FETCH FIRST
+				    5 ROWS ONLY;
+								""");
+		try {
+			System.out.println("################## 1st Query ###############");
+			while (query1.next()) {
+				System.out.println(query1.getString(1) + " " + query1.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println();
+
+		ResultSet query2 = executeQuery(connection, """
+				SELECT
+				    airport.City,
+				    Count(*)
+				FROM
+				    delayedFlights
+				    INNER JOIN airport ON airport.airportCode = delayedFlights.Orig
+				GROUP BY
+				    airport.City
+				ORDER BY
+				    Count(*) DESC
+				FETCH FIRST
+				    5 ROWS ONLY;
+												""");
+		try {
+			System.out.println("################## 2nd Query ###############");
+			while (query2.next()) {
+				System.out.println(query2.getString(1).trim() + " " + query2.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println();
+
+		ResultSet query3 = executeQuery(connection, """
+				SELECT
+				    Dest,
+				    SUM(ArrDelay)
+				FROM
+				    delayedFlights
+				GROUP BY
+				    Dest
+				ORDER BY
+				    SUM(ArrDelay) DESC
+				OFFSET
+				    1 ROWS
+				FETCH NEXT
+				    5 ROWS ONLY;
+																""");
+		try {
+			System.out.println("################## 3nd Query ###############");
+			while (query3.next()) {
+				System.out.println(query3.getString(1).trim() + " " + query3.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println();
+
+		ResultSet query4 = executeQuery(connection, """
+				SELECT
+				    State,
+				    COUNT(*)
+				FROM
+				    airport
+				GROUP BY
+				    State
+				HAVING
+				    Count(*) > 10;
+																				""");
+		try {
+			System.out.println("################## 4th Query ###############");
+			while (query4.next()) {
+				System.out.println(query4.getString(1).trim() + " " + query4.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println();
+
+		ResultSet query5 = executeQuery(connection, """
+				SELECT
+				    DISTINCT o.State, Count(*)
+				from
+				    delayedFlights
+				    INNER JOIN airport o on delayedFlights.Orig = o.airportCode
+				    INNER JOIN airport d on delayedFlights.Dest = d.airportCode
+				WHERE
+				    o.State = d.State
+				GROUP BY
+				    o.State
+				ORDER BY
+				    Count(*) DESC
+				FETCH FIRST
+				    5 ROWS ONLY;
+																								""");
+		try {
+			System.out.println("################## 5th Query ###############");
+			while (query5.next()) {
+				System.out.println(query5.getString(1).trim() + " " + query5.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static Connection connectToDatabase(String user, String password, String database) {
-		System.out.println("------ Testing PostgreSQL JDBC Connection ------");
+//		System.out.println("------ Testing PostgreSQL JDBC Connection ------");
 		Connection connection = null;
 		try {
 			String protocol = "jdbc:postgresql://";
@@ -89,7 +241,7 @@ public class myDBApp {
 	}
 
 	public static ResultSet executeQuery(Connection connection, String query) {
-		System.out.println("DEBUG: Executing query...");
+//		System.out.println("DEBUG: Executing query...");
 		try {
 			Statement st = connection.createStatement();
 			ResultSet rs = st.executeQuery(query);
@@ -101,7 +253,7 @@ public class myDBApp {
 	}
 
 	public static void dropTable(Connection connection, String table) {
-		System.out.println("DEBUG: Dropping table if exists: " + table);
+//		System.out.println("DEBUG: Dropping table if exists: " + table);
 		try {
 			Statement st = connection.createStatement();
 			st.execute("DROP TABLE IF EXISTS " + table);
@@ -112,7 +264,7 @@ public class myDBApp {
 	}
 
 	public static void createTable(Connection connection, String tableDescription) {
-		System.out.println("DEBUG: Creating table...");
+//		System.out.println("DEBUG: Creating table...");
 		try {
 			Statement st = connection.createStatement();
 			st.execute("CREATE TABLE " + tableDescription);
