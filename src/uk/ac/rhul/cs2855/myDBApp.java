@@ -1,45 +1,70 @@
 package uk.ac.rhul.cs2855;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Scanner;
 
 public class myDBApp {
 
-	// NOTE: You will need to change some variables from START to END.
+	/**
+	 * 
+	 * 
+	 * @param argv Command-line arguments
+	 * @throws SQLException Thrown when error in SQL
+	 */
 	public static void main(String[] argv) throws SQLException {
-		// START
-		// Enter your username.
-		String user = "<<< CHANGE ME - Username >>>";
-		// Enter your database password, NOT your university password.
-		String password = "<<< CHANGE ME - Password >>>";
 
 		/**
-		 * IMPORTANT: If you are using NoMachine, you can leave this as it is.
-		 * 
-		 * Otherwise, if you are using your OWN COMPUTER with TUNNELLING: 1) Delete the
-		 * original database string and 2) Remove the '//' in front of the second
-		 * database string.
+		 * Initialising a connection to the postgres server
 		 */
-		String database = "teachdb.cs.rhul.ac.uk";
-		// String database = "localhost";
-		// END
 
+		// 1. The program should ask the user for his/her username and password
+		Scanner sc = new Scanner(System.in);
+		System.out.print("Enter your database username: ");
+		String user = sc.next();
+		System.out.println();
+		System.out.print("Enter your database password: ");
+		String password = sc.next();
+		System.out.println();
+		sc.close();
+
+		// connect to the correct database based on this username and password.
+		String database = "teachdb.cs.rhul.ac.uk";
 		Connection connection = connectToDatabase(user, password, database);
 		if (connection != null) {
-			System.out.println("SUCCESS: You made it!" + "\n\t You can now take control of your database!\n");
+			System.out.println("SUCCESS: \t Database connected.\n");
 		} else {
-			System.out.println("ERROR: \tFailed to make connection!");
+			System.out.println("ERROR: \tConnection failed. Exiting...");
 			System.exit(1);
 		}
-		// Now we're ready to use the DB. You may add your code below this line.
 
+		/**
+		 * Reading/writing tables in the databases
+		 */
+
+		// The program should check if the tables (and possibly views) it creates
+		// already exist in the database, and only if they do, drop them before their
+		// creation.
+		dropTable(connection, "delayedFlights");
+		dropTable(connection, "airport");
+		createTable(connection,
+				"delayedFlights(ID_of_Delayed_Flight int,Month int,DayofMonth int,"
+						+ "DayOfWeek int,DepTime int,ScheduledDepTime int,ArrTime int,ScheduledArrTime int,"
+						+ "UniqueCarrier char(2),FlightNum char(4),ActualFlightTime int,scheduledFlightTime int,"
+						+ "AirTime int,ArrDelay int,DepDelay int, Orig char(3),Dest char(3),Distance int,"
+						+ "primary key (ID_of_Delayed_Flight));");
+		insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights");
+		createTable(connection, "airport(airportCode char(3),airportName char(60),"
+				+ "City char(40),State char(2),primary key (airportCode));");
+		insertIntoTableFromFile(connection, "airport", "airport");
 	}
 
-	// You can write your new methods here.
-
-	// ADVANCED: This method is for advanced users only. You should not need to
-	// change this!
 	public static Connection connectToDatabase(String user, String password, String database) {
 		System.out.println("------ Testing PostgreSQL JDBC Connection ------");
 		Connection connection = null;
@@ -62,4 +87,65 @@ public class myDBApp {
 		}
 		return connection;
 	}
+
+	public static ResultSet executeQuery(Connection connection, String query) {
+		System.out.println("DEBUG: Executing query...");
+		try {
+			Statement st = connection.createStatement();
+			ResultSet rs = st.executeQuery(query);
+			return rs;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static void dropTable(Connection connection, String table) {
+		System.out.println("DEBUG: Dropping table if exists: " + table);
+		try {
+			Statement st = connection.createStatement();
+			st.execute("DROP TABLE IF EXISTS " + table);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void createTable(Connection connection, String tableDescription) {
+		System.out.println("DEBUG: Creating table...");
+		try {
+			Statement st = connection.createStatement();
+			st.execute("CREATE TABLE " + tableDescription);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static int insertIntoTableFromFile(Connection connection, String table, String filename) {
+		int numRows = 0;
+		String currentLine = null;
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(filename));
+			Statement st = connection.createStatement();
+			// Read in each line of the file until we reach the end.
+			while ((currentLine = br.readLine()) != null) {
+				String[] values = currentLine.split(",");
+				String composedLine = "INSERT INTO " + table + " VALUES (";
+				for (int i = 0; i < values.length; i++) {
+					composedLine += "'" + values[i] + "'";
+					if ((values.length - i) > 1)
+						composedLine += ",";
+				}
+				composedLine += ");";
+				// Finally, execute the entire composed line.
+				numRows += st.executeUpdate(composedLine);
+			}
+			br.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return numRows;
+	}
+
 }
