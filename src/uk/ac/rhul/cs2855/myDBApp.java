@@ -1,35 +1,30 @@
 package uk.ac.rhul.cs2855;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Scanner;
 
 public class myDBApp {
 
-	// NOTE: You will need to change some variables from START to END.
 	public static void main(String[] argv) throws SQLException {
-		// START
-		// Enter your username.
-		String user = "<<< CHANGE ME - Username >>>";
-		// Enter your database password, NOT your university password.
-		String password = "<<< CHANGE ME - Password >>>";
 
-		/**
-		 * IMPORTANT: If you are using NoMachine, you can leave this as it is.
-		 * 
-		 * Otherwise, if you are using your OWN COMPUTER with TUNNELLING: 1) Delete the
-		 * original database string and 2) Remove the '//' in front of the second
-		 * database string.
-		 */
+		Scanner sc = new Scanner(System.in);
+		System.out.print("Enter your database username: ");
+		String user = sc.next();
+		System.out.println();
+		System.out.print("Enter your database password: ");
+		String password = sc.next();
+		System.out.println();
+
+		// Assuming this is running on NoMachine Linux environment without tunnelling
 		String database = "teachdb.cs.rhul.ac.uk";
-		// String database = "localhost";
-		// END
 
 		Connection connection = connectToDatabase(user, password, database);
 		if (connection != null) {
-			System.out.println("SUCCESS: You made it!" + "\n\t You can now take control of your database!\n");
+			System.out.println("SUCCESS: \t Database connected.\n");
 		} else {
-			System.out.println("ERROR: \tFailed to make connection!");
+			System.out.println("ERROR: \tConnection failed. Exiting...");
 			System.exit(1);
 		}
 		// Now we're ready to use the DB. You may add your code below this line.
