@@ -13,7 +13,7 @@ import java.util.Scanner;
 public class myDBApp {
 
 	/**
-	 * 
+	 * Main method for myDBApp.
 	 * 
 	 * @param argv Command-line arguments
 	 * @throws SQLException Thrown when error in SQL
@@ -53,16 +53,63 @@ public class myDBApp {
 		// creation.
 		dropTable(connection, "delayedFlights");
 		dropTable(connection, "airport");
-		createTable(connection,
-				"delayedFlights(ID_of_Delayed_Flight int,Month int,DayofMonth int,"
-						+ "DayOfWeek int,DepTime int,ScheduledDepTime int,ArrTime int,ScheduledArrTime int,"
-						+ "UniqueCarrier char(2),FlightNum char(4),ActualFlightTime int,scheduledFlightTime int,"
-						+ "AirTime int,ArrDelay int,DepDelay int, Orig char(3),Dest char(3),Distance int,"
-						+ "primary key (ID_of_Delayed_Flight));");
+		createTable(connection, """
+				delayedFlights(
+				    ID_of_Delayed_Flight int,
+				    Month int,
+				    DayofMonth int,
+				    DayOfWeek int,
+				    DepTime int,
+				    ScheduledDepTime int,
+				    ArrTime int,
+				    ScheduledArrTime int,
+				    UniqueCarrier char(2),
+				    FlightNum char(4),
+				    ActualFlightTime int,
+				    scheduledFlightTime int,
+				    AirTime int,
+				    ArrDelay int,
+				    DepDelay int,
+				    Orig char(3),
+				    Dest char(3),
+				    Distance int,
+				    primary key (ID_of_Delayed_Flight)
+				);
+								""");
 		insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights");
-		createTable(connection, "airport(airportCode char(3),airportName char(60),"
-				+ "City char(40),State char(2),primary key (airportCode));");
+		createTable(connection, """
+				airport (
+				    airportCode char(3),
+				    airportName char(100),
+				    City char(50),
+				    State char(2),
+				    primary key (airportCode)
+				);
+								""");
 		insertIntoTableFromFile(connection, "airport", "airport");
+
+		ResultSet query1 = executeQuery(connection, """
+				SELECT
+				    UniqueCarrier,
+				    Count(*)
+				FROM
+				    delayedFlights
+				GROUP BY
+				    UniqueCarrier
+				ORDER BY
+				    Count(*) DESC
+				FETCH FIRST
+				    5 ROWS ONLY;
+								""");
+		try {
+			System.out.println("################## 1st Query ###############");
+			while (query1.next()) {
+				System.out.println(query1.getString(1) + " " + query1.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static Connection connectToDatabase(String user, String password, String database) {
