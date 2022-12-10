@@ -166,6 +166,28 @@ public class myDBApp {
 			e.printStackTrace();
 		}
 
+		System.out.println();
+
+		ResultSet query4 = executeQuery(connection, """
+				SELECT
+				    State,
+				    COUNT(*)
+				FROM
+				    airport
+				GROUP BY
+				    State
+				HAVING
+				    Count(*) > 10;
+																				""");
+		try {
+			System.out.println("################## 4th Query ###############");
+			while (query4.next()) {
+				System.out.println(query4.getString(1).trim() + " " + query4.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static Connection connectToDatabase(String user, String password, String database) {
