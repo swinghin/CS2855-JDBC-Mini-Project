@@ -109,6 +109,31 @@ public class myDBApp {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		System.out.println();
+
+		ResultSet query2 = executeQuery(connection, """
+				SELECT
+				    airport.City,
+				    Count(*)
+				FROM
+				    delayedFlights
+				    INNER JOIN airport ON airport.airportCode = delayedFlights.Orig
+				GROUP BY
+				    airport.City
+				ORDER BY
+				    Count(*) DESC
+				FETCH FIRST
+				    5 ROWS ONLY;
+												""");
+		try {
+			System.out.println("################## 2nd Query ###############");
+			while (query2.next()) {
+				System.out.println(query2.getString(1).trim() + " " + query2.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
 	}
 
