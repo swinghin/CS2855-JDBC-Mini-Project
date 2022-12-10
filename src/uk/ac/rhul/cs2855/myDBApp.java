@@ -188,6 +188,33 @@ public class myDBApp {
 			e.printStackTrace();
 		}
 
+		System.out.println();
+
+		ResultSet query5 = executeQuery(connection, """
+				SELECT
+				    DISTINCT o.State, Count(*)
+				from
+				    delayedFlights
+				    INNER JOIN airport o on delayedFlights.Orig = o.airportCode
+				    INNER JOIN airport d on delayedFlights.Dest = d.airportCode
+				WHERE
+				    o.State = d.State
+				GROUP BY
+				    o.State
+				ORDER BY
+				    Count(*) DESC
+				FETCH FIRST
+				    5 ROWS ONLY;
+																								""");
+		try {
+			System.out.println("################## 5th Query ###############");
+			while (query5.next()) {
+				System.out.println(query5.getString(1).trim() + " " + query5.getString(2));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static Connection connectToDatabase(String user, String password, String database) {
