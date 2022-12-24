@@ -177,7 +177,7 @@ public class myDBApp {
 				GROUP BY
 				    State
 				HAVING
-				    Count(*) > 10;
+				    Count(*) >= 10;
 																				""");
 		try {
 			System.out.println("################## 4th Query ###############");
