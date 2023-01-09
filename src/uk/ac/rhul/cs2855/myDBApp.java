@@ -51,8 +51,8 @@ public class myDBApp {
 		// The program should check if the tables (and possibly views) it creates
 		// already exist in the database, and only if they do, drop them before their
 		// creation.
-		dropTable(connection, "airport");
 		dropTable(connection, "delayedFlights");
+		dropTable(connection, "airport");
 
 		System.out.println("Create database airport...");
 		createTable(connection, """
