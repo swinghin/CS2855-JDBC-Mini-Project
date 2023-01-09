@@ -51,37 +51,10 @@ public class myDBApp {
 		// The program should check if the tables (and possibly views) it creates
 		// already exist in the database, and only if they do, drop them before their
 		// creation.
-		dropTable(connection, "delayedFlights");
 		dropTable(connection, "airport");
+		dropTable(connection, "delayedFlights");
 
-		System.out.println("Create database delayedFlights...");
-		createTable(connection, """
-				delayedFlights(
-				    ID_of_Delayed_Flight int,
-				    Month int,
-				    DayofMonth int,
-				    DayOfWeek int,
-				    DepTime int,
-				    ScheduledDepTime int,
-				    ArrTime int,
-				    ScheduledArrTime int,
-				    UniqueCarrier char(2),
-				    FlightNum char(4),
-				    ActualFlightTime int,
-				    scheduledFlightTime int,
-				    AirTime int,
-				    ArrDelay int,
-				    DepDelay int,
-				    Orig char(3),
-				    Dest char(3),
-				    Distance int,
-				    primary key (ID_of_Delayed_Flight)
-				);
-								""");
-		System.out.println(
-				"Inserted " + insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights") + " rows.\n");
-
-		System.out.println("Create database delayedFlights...");
+		System.out.println("Create database airport...");
 		createTable(connection, """
 				airport (
 				    airportCode char(3),
@@ -92,6 +65,35 @@ public class myDBApp {
 				);
 								""");
 		System.out.println("Inserted " + insertIntoTableFromFile(connection, "airport", "airport") + " rows.\n");
+
+		System.out.println("Create database delayedFlights...");
+		createTable(connection, """
+				delayedFlights(
+				    ID_of_Delayed_Flight int not null,
+				    Month int not null,
+				    DayofMonth int not null,
+				    DayOfWeek int not null,
+				    DepTime int not null,
+				    ScheduledDepTime int not null,
+				    ArrTime int not null,
+				    ScheduledArrTime int not null,
+				    UniqueCarrier char(2) not null,
+				    FlightNum char(4) not null,
+				    ActualFlightTime int not null,
+				    scheduledFlightTime int not null,
+				    AirTime int not null,
+				    ArrDelay int not null,
+				    DepDelay int not null,
+				    Orig char(3) not null,
+				    Dest char(3) not null,
+				    Distance int not null,
+				    primary key (ID_of_Delayed_Flight),
+				    foreign key (Orig) references airport(airportCode),
+				    foreign key (Dest) references airport(airportCode)
+				);
+								""");
+		System.out.println(
+				"Inserted " + insertIntoTableFromFile(connection, "delayedFlights", "delayedFlights") + " rows.\n");
 
 		ResultSet query1 = executeQuery(connection, """
 				SELECT
